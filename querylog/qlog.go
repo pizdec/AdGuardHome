@@ -3,6 +3,7 @@ package querylog
 import (
 	"fmt"
 	"net"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -49,6 +50,33 @@ func (l *queryLog) Close() {
 
 func (l *queryLog) Configure(conf Config) {
 	l.conf = conf
+}
+
+// Clear memory buffer and remove the file
+func (l *queryLog) Clear() {
+	l.fileFlushLock.Lock()
+	defer l.fileFlushLock.Unlock()
+
+	l.logBufferLock.Lock()
+	l.logBuffer = nil
+	l.flushPending = false
+	l.logBufferLock.Unlock()
+
+	l.queryLogLock.Lock()
+	l.queryLogCache = nil
+	l.queryLogLock.Unlock()
+
+	err := os.Remove(l.logFile + ".1")
+	if err != nil {
+		log.Error("file remove: %s: %s", l.logFile+".1", err)
+	}
+
+	err = os.Remove(l.logFile)
+	if err != nil {
+		log.Error("file remove: %s: %s", l.logFile, err)
+	}
+
+	log.Debug("Query log: cleared")
 }
 
 type logEntry struct {

@@ -18,6 +18,7 @@ type QueryLog interface {
 
 	Add(question *dns.Msg, answer *dns.Msg, result *dnsfilter.Result, elapsed time.Duration, addr net.Addr, upstream string)
 	GetData() []map[string]interface{}
+	Clear()
 }
 
 // Config - configuration object

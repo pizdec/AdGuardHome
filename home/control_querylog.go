@@ -34,6 +34,11 @@ func handleQueryLog(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleQueryLogClear(w http.ResponseWriter, r *http.Request) {
+	config.queryLog.Clear()
+	returnOK(w)
+}
+
 type qlogConfig struct {
 	Interval uint `json:"interval"`
 }
@@ -83,6 +88,7 @@ func handleQueryLogConfig(w http.ResponseWriter, r *http.Request) {
 func RegisterQueryLogHandlers() {
 	httpRegister(http.MethodGet, "/control/querylog", handleQueryLog)
 	httpRegister(http.MethodGet, "/control/querylog_info", handleQueryLogInfo)
+	httpRegister(http.MethodPost, "/control/querylog_clear", handleQueryLogClear)
 	httpRegister(http.MethodPost, "/control/querylog_config", handleQueryLogConfig)
 	httpRegister(http.MethodPost, "/control/querylog_enable", handleQueryLogEnable)
 	httpRegister(http.MethodPost, "/control/querylog_disable", handleQueryLogDisable)
