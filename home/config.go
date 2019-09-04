@@ -170,16 +170,16 @@ var config = configuration{
 		Port:          53,
 		StatsInterval: 1,
 		FilteringConfig: dnsforward.FilteringConfig{
-			ProtectionEnabled:  true,       // whether or not use any of dnsfilter features
-			FilteringEnabled:   true,       // whether or not use filter lists
+			ProtectionEnabled:     true, // whether or not use any of dnsfilter features
+			FilteringEnabled:      true, // whether or not use filter lists
 			FiltersUpdateInterval: 24,
-			BlockingMode:       "nxdomain", // mode how to answer filtered requests
-			BlockedResponseTTL: 10,         // in seconds
-			QueryLogEnabled:    true,
-			Ratelimit:          20,
-			RefuseAny:          true,
-			BootstrapDNS:       defaultBootstrap,
-			AllServers:         false,
+			BlockingMode:          "nxdomain", // mode how to answer filtered requests
+			BlockedResponseTTL:    10,         // in seconds
+			QueryLogEnabled:       true,
+			Ratelimit:             20,
+			RefuseAny:             true,
+			BootstrapDNS:          defaultBootstrap,
+			AllServers:            false,
 		},
 		UpstreamDNS: defaultDNS,
 	},
@@ -273,6 +273,9 @@ func parseConfig() error {
 
 	if !checkStatsInterval(config.DNS.StatsInterval) {
 		config.DNS.StatsInterval = 1
+	}
+	if !checkFiltersUpdateInterval(config.DNS.FiltersUpdateInterval) {
+		config.DNS.FiltersUpdateInterval = 24
 	}
 
 	for _, cy := range config.Clients {

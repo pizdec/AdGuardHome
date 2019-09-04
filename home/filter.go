@@ -23,11 +23,11 @@ var (
 
 // field ordering is important -- yaml fields will mirror ordering from here
 type filter struct {
-	Enabled     bool      `json:"enabled"`
-	URL         string    `json:"url"`
-	Name        string    `json:"name" yaml:"name"`
-	RulesCount  int       `json:"rulesCount" yaml:"-"`
-	LastUpdated time.Time `json:"lastUpdated,omitempty" yaml:"-"`
+	Enabled     bool
+	URL         string
+	Name        string    `yaml:"name"`
+	RulesCount  int       `yaml:"-"`
+	LastUpdated time.Time `yaml:"-"`
 	checksum    uint32    // checksum of the file data
 
 	dnsfilter.Filter `yaml:",inline"`
@@ -159,7 +159,16 @@ func assignUniqueFilterID() int64 {
 
 // Sets up a timer that will be checking for filters updates periodically
 func periodicallyRefreshFilters() {
-	for range time.Tick(time.Duration(config.DNS.FiltersUpdateInterval) * time.Hour) {
+	for {
+		wait := config.DNS.FiltersUpdateInterval
+		if wait == 0 {
+			wait = 1
+		}
+		time.Sleep(time.Duration(wait) * time.Hour)
+		if config.DNS.FiltersUpdateInterval == 0 {
+			continue
+		}
+
 		refreshFiltersIfNecessary(false)
 	}
 }

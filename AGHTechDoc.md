@@ -42,6 +42,10 @@ Contents:
 	* API: Clear statistics data
 	* API: Set statistics parameters
 	* API: Get statistics parameters
+* Filtering
+	* API: Get filtering parameters
+	* API: Set filtering parameters
+	* API: Set URL parameters
 
 
 ## First startup
@@ -976,3 +980,66 @@ Response:
 	{
 		"interval": 1 | 7 | 30 | 90
 	}
+
+
+## Filtering
+
+
+### API: Get filtering parameters
+
+Request:
+
+	GET /control/filtering_info
+
+Response:
+
+	200 OK
+
+	{
+		"enabled": true | false
+		"interval": 0 | 1 | 6 | 12 | 1*24 || 2*24
+		"filters":[
+			{
+			"id":1
+			"enabled":true,
+			"url":"https://...",
+			"name":"...",
+			"rulesCount":1234,
+			"lastUpdated":"2019-09-04T18:29:30+00:00",
+			}
+			...
+		],
+		"user_rules":["...", ...]
+	}
+
+
+### API: Set filtering parameters
+
+Request:
+
+	POST /control/filtering_config
+
+	{
+		"enabled": true | false
+		"interval": 0 | 1 | 6 | 12 | 1*24 || 2*24
+	}
+
+Response:
+
+	200 OK
+
+
+### API: Set URL parameters
+
+Request:
+
+	POST /control/filtering/set_url
+
+	{
+		"url": "..."
+		"enabled": true | false
+	}
+
+Response:
+
+	200 OK
