@@ -11,6 +11,7 @@ import (
 
 	"github.com/AdguardTeam/golibs/log"
 	"github.com/go-test/deep"
+	"github.com/miekg/dns"
 )
 
 var (
@@ -176,5 +177,142 @@ func (l *queryLog) periodicQueryLogRotate() {
 			log.Error("Failed to rotate querylog: %s", err)
 			// do nothing, continue rotating
 		}
+	}
+}
+
+func (l *queryLog) genericLoader(onEntry func(entry *logEntry) error, needMore func() bool, timeWindow time.Duration) error {
+	now := time.Now()
+	// read from querylog files, try newest file first
+	var files []string
+
+	if enableGzip {
+		files = []string{
+			l.logFile + ".gz",
+			l.logFile + ".gz.1",
+		}
+	} else {
+		files = []string{
+			l.logFile,
+			l.logFile + ".1",
+		}
+	}
+
+	// read from all files
+	for _, file := range files {
+		if !needMore() {
+			break
+		}
+		if _, err := os.Stat(file); os.IsNotExist(err) {
+			// do nothing, file doesn't exist
+			continue
+		}
+
+		f, err := os.Open(file)
+		if err != nil {
+			log.Error("Failed to open file \"%s\": %s", file, err)
+			// try next file
+			continue
+		}
+		defer f.Close()
+
+		var d *json.Decoder
+
+		if enableGzip {
+			zr, err := gzip.NewReader(f)
+			if err != nil {
+				log.Error("Failed to create gzip reader: %s", err)
+				continue
+			}
+			defer zr.Close()
+			d = json.NewDecoder(zr)
+		} else {
+			d = json.NewDecoder(f)
+		}
+
+		i := 0
+		over := 0
+		max := 10000 * time.Second
+		var sum time.Duration
+		// entries on file are in oldest->newest order
+		// we want maxLen newest
+		for d.More() {
+			if !needMore() {
+				break
+			}
+			var entry logEntry
+			err := d.Decode(&entry)
+			if err != nil {
+				log.Error("Failed to decode: %s", err)
+				// next entry can be fine, try more
+				continue
+			}
+
+			if now.Sub(entry.Time) > timeWindow {
+				continue
+			}
+
+			if entry.Elapsed > max {
+				over++
+			} else {
+				sum += entry.Elapsed
+			}
+
+			i++
+			err = onEntry(&entry)
+			if err != nil {
+				return err
+			}
+		}
+		elapsed := time.Since(now)
+		var perunit time.Duration
+		var avg time.Duration
+		if i > 0 {
+			perunit = elapsed / time.Duration(i)
+			avg = sum / time.Duration(i)
+		}
+		log.Debug("file \"%s\": read %d entries in %v, %v/entry, %v over %v, %v avg", file, i, elapsed, perunit, over, max, avg)
+	}
+	return nil
+}
+
+func (l *queryLog) fillFromFile() {
+	now := time.Now()
+	onEntry := func(entry *logEntry) error {
+		if len(entry.Question) == 0 {
+			log.Printf("entry question is absent, skipping")
+			return nil
+		}
+
+		if entry.Time.After(now) {
+			log.Printf("t %v vs %v is in the future, ignoring", entry.Time, now)
+			return nil
+		}
+
+		q := new(dns.Msg)
+		if err := q.Unpack(entry.Question); err != nil {
+			log.Printf("failed to unpack dns message question: %s", err)
+			return err
+		}
+
+		if len(q.Question) != 1 {
+			log.Printf("malformed dns message, has no questions, skipping")
+			return nil
+		}
+
+		l.queryLogLock.Lock()
+		l.queryLogCache = append(l.queryLogCache, entry)
+		if len(l.queryLogCache) > queryLogSize {
+			toremove := len(l.queryLogCache) - queryLogSize
+			l.queryLogCache = l.queryLogCache[toremove:]
+		}
+		l.queryLogLock.Unlock()
+		return nil
+	}
+
+	needMore := func() bool { return true }
+	err := l.genericLoader(onEntry, needMore, l.conf.Interval)
+	if err != nil {
+		log.Printf("Failed to load entries from querylog: %s", err)
+		return
 	}
 }

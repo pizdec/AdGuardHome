@@ -41,6 +41,7 @@ func newQueryLog(conf Config) *queryLog {
 	l.logFile = filepath.Join(conf.BaseDir, queryLogFileName)
 	l.conf = conf
 	go l.periodicQueryLogRotate()
+	go l.fillFromFile()
 	return &l
 }
 
