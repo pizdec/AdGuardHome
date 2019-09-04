@@ -69,6 +69,8 @@ func handleQueryLogConfig(w http.ResponseWriter, r *http.Request) {
 
 	config.DNS.QueryLogEnabled = reqData.Enabled
 	config.DNS.QueryLogInterval = reqData.Interval
+	_ = config.write()
+
 	conf := querylog.Config{
 		Interval: time.Duration(config.DNS.QueryLogInterval) * 24 * time.Hour,
 	}
