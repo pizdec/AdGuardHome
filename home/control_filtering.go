@@ -235,3 +235,16 @@ func handleFilteringRefresh(w http.ResponseWriter, r *http.Request) {
 	updated := refreshFiltersIfNecessary(true)
 	fmt.Fprintf(w, "OK %d filters updated\n", updated)
 }
+
+// RegisterFilteringHandlers - register handlers
+func RegisterFilteringHandlers() {
+	httpRegister(http.MethodPost, "/control/filtering/enable", handleFilteringEnable)
+	httpRegister(http.MethodPost, "/control/filtering/disable", handleFilteringDisable)
+	httpRegister(http.MethodPost, "/control/filtering/add_url", handleFilteringAddURL)
+	httpRegister(http.MethodPost, "/control/filtering/remove_url", handleFilteringRemoveURL)
+	httpRegister(http.MethodPost, "/control/filtering/enable_url", handleFilteringEnableURL)
+	httpRegister(http.MethodPost, "/control/filtering/disable_url", handleFilteringDisableURL)
+	httpRegister(http.MethodPost, "/control/filtering/refresh", handleFilteringRefresh)
+	httpRegister(http.MethodGet, "/control/filtering/status", handleFilteringStatus)
+	httpRegister(http.MethodPost, "/control/filtering/set_rules", handleFilteringSetRules)
+}
