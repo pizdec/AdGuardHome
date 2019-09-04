@@ -191,24 +191,6 @@ paths:
                     description: OK
                     schema:
                         $ref: '#/definitions/QueryLog'
-    /querylog_enable:
-        post:
-            tags:
-                - log
-            operationId: querylogEnable
-            summary: 'Enable querylog'
-            responses:
-                200:
-                    description: OK
-    /querylog_disable:
-        post:
-            tags:
-                - log
-            operationId: querylogDisable
-            summary: 'Disable querylog'
-            responses:
-                200:
-                    description: OK
 
     /querylog_clear:
         post:
