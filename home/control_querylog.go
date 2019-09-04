@@ -8,16 +8,6 @@ import (
 	"github.com/AdguardTeam/AdGuardHome/querylog"
 )
 
-func handleQueryLogEnable(w http.ResponseWriter, r *http.Request) {
-	config.DNS.QueryLogEnabled = true
-	httpUpdateConfigReloadDNSReturnOK(w, r)
-}
-
-func handleQueryLogDisable(w http.ResponseWriter, r *http.Request) {
-	config.DNS.QueryLogEnabled = false
-	httpUpdateConfigReloadDNSReturnOK(w, r)
-}
-
 func handleQueryLog(w http.ResponseWriter, r *http.Request) {
 	data := config.queryLog.GetData()
 
@@ -40,12 +30,14 @@ func handleQueryLogClear(w http.ResponseWriter, r *http.Request) {
 }
 
 type qlogConfig struct {
-	Interval uint `json:"interval"`
+	Enabled  bool   `json:"enabled"`
+	Interval uint32 `json:"interval"`
 }
 
 // Get configuration
 func handleQueryLogInfo(w http.ResponseWriter, r *http.Request) {
 	resp := qlogConfig{}
+	resp.Enabled = config.DNS.QueryLogEnabled
 	resp.Interval = config.DNS.QueryLogInterval
 
 	jsonVal, err := json.Marshal(resp)
@@ -70,11 +62,12 @@ func handleQueryLogConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkStatsInterval(reqData.Interval) {
+	if !checkStatsInterval(uint(reqData.Interval)) {
 		httpError(w, http.StatusBadRequest, "Unsupported interval")
 		return
 	}
 
+	config.DNS.QueryLogEnabled = reqData.Enabled
 	config.DNS.QueryLogInterval = reqData.Interval
 	conf := querylog.Config{
 		Interval: time.Duration(config.DNS.QueryLogInterval) * 24 * time.Hour,
@@ -90,6 +83,4 @@ func RegisterQueryLogHandlers() {
 	httpRegister(http.MethodGet, "/control/querylog_info", handleQueryLogInfo)
 	httpRegister(http.MethodPost, "/control/querylog_clear", handleQueryLogClear)
 	httpRegister(http.MethodPost, "/control/querylog_config", handleQueryLogConfig)
-	httpRegister(http.MethodPost, "/control/querylog_enable", handleQueryLogEnable)
-	httpRegister(http.MethodPost, "/control/querylog_disable", handleQueryLogDisable)
 }

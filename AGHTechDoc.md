@@ -990,6 +990,7 @@ Request:
 	POST /control/querylog_config
 
 	{
+		"enabled": true | false
 		"interval": 1 | 7 | 30 | 90
 	}
 
@@ -1009,5 +1010,6 @@ Response:
 	200 OK
 
 	{
+		"enabled": true | false
 		"interval": 1 | 7 | 30 | 90
 	}
