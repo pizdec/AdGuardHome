@@ -159,7 +159,7 @@ func assignUniqueFilterID() int64 {
 
 // Sets up a timer that will be checking for filters updates periodically
 func periodicallyRefreshFilters() {
-	for range time.Tick(time.Minute) {
+	for range time.Tick(time.Duration(config.DNS.FiltersUpdateInterval) * time.Hour) {
 		refreshFiltersIfNecessary(false)
 	}
 }
@@ -184,15 +184,12 @@ func refreshFiltersIfNecessary(force bool) int {
 		return 0
 	}
 
+	now := time.Now()
 	config.RLock()
 	for i := range config.Filters {
 		f := &config.Filters[i] // otherwise we will be operating on a copy
 
 		if !f.Enabled {
-			continue
-		}
-
-		if !force && time.Since(f.LastUpdated) <= updatePeriod {
 			continue
 		}
 
@@ -214,7 +211,7 @@ func refreshFiltersIfNecessary(force bool) int {
 			log.Printf("Failed to update filter %s: %s\n", uf.URL, err)
 			continue
 		}
-		uf.LastUpdated = time.Now()
+		uf.LastUpdated = now
 		if updated {
 			updateCount++
 		}
@@ -366,6 +363,7 @@ func (filter *filter) save() error {
 
 	// update LastUpdated field after saving the file
 	filter.LastUpdated = filter.LastTimeUpdated()
+	log.Fatalf("LastUpdated: %s", filter.LastUpdated)
 	return err
 }
 

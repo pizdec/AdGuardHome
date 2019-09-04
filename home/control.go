@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/AdguardTeam/AdGuardHome/dnsforward"
 	"github.com/AdguardTeam/dnsproxy/upstream"
@@ -16,8 +15,6 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/miekg/dns"
 )
-
-const updatePeriod = time.Hour * 24
 
 var protocols = []string{"tls://", "https://", "tcp://", "sdns://"}
 
