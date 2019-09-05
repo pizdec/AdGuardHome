@@ -43,6 +43,7 @@ Contents:
 	* API: Set statistics parameters
 	* API: Get statistics parameters
 * Filtering
+	* Filters update mechanism
 	* API: Get filtering parameters
 	* API: Set filtering parameters
 	* API: Set URL parameters
@@ -983,6 +984,16 @@ Response:
 
 
 ## Filtering
+
+### Filters update mechanism
+
+Filters can be updated either manually by request from UI or automatically.
+Auto-update interval can be configured in UI.  If it is 0, auto-update is disabled.
+When the last modification date of filter files is older than auto-update interval, auto-update procedure is started.
+If an enabled filter file doesn't exist, it's downloaded on application startup.  This includes the case when installation wizard is completed and there are no filter files yet.
+When auto-update time comes, server starts the update procedure by downloading filter files.  After new filter files are in place, it restarts DNS filtering module with new rules.
+Only filters that are enabled by configuration can be updated.
+As a result of the update procedure, all enabled filter files are written to disk, refreshed (their last modification date is equal to the current time) and loaded.
 
 
 ### API: Get filtering parameters

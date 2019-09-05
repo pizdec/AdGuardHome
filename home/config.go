@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/AdguardTeam/AdGuardHome/dhcpd"
-	"github.com/AdguardTeam/AdGuardHome/dnsfilter"
 	"github.com/AdguardTeam/AdGuardHome/dnsforward"
 	"github.com/AdguardTeam/AdGuardHome/stats"
 	"github.com/AdguardTeam/golibs/file"
@@ -70,6 +69,7 @@ type configuration struct {
 	transport        *http.Transport
 	client           *http.Client
 	stats            stats.Stats
+	filteringStarted bool
 
 	// cached version.json to avoid hammering github.io for each page reload
 	versionCheckJSON     []byte
@@ -189,12 +189,6 @@ var config = configuration{
 			PortDNSOverTLS: 853, // needs to be passed through to dnsproxy
 		},
 	},
-	Filters: []filter{
-		{Filter: dnsfilter.Filter{ID: 1}, Enabled: true, URL: "https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt", Name: "AdGuard Simplified Domain Names filter"},
-		{Filter: dnsfilter.Filter{ID: 2}, Enabled: false, URL: "https://adaway.org/hosts.txt", Name: "AdAway"},
-		{Filter: dnsfilter.Filter{ID: 3}, Enabled: false, URL: "https://hosts-file.net/ad_servers.txt", Name: "hpHosts - Ad and Tracking servers only"},
-		{Filter: dnsfilter.Filter{ID: 4}, Enabled: false, URL: "https://www.malwaredomainlist.com/hostslist/hosts.txt", Name: "MalwareDomainList.com Hosts List"},
-	},
 	DHCP: dhcpd.ServerConfig{
 		LeaseDuration: 86400,
 		ICMPTimeout:   1000,
@@ -224,6 +218,7 @@ func initConfig() {
 	config.DNS.SafeSearchCacheSize = 1 * 1024 * 1024
 	config.DNS.ParentalCacheSize = 1 * 1024 * 1024
 	config.DNS.CacheTime = 30
+	config.Filters = defaultFilters()
 }
 
 // getConfigFilename returns path to the current config file
@@ -304,11 +299,6 @@ func parseConfig() error {
 		log.Error("%s", status.WarningValidation)
 		return err
 	}
-
-	// Deduplicate filters
-	deduplicateFilters()
-
-	updateUniqueFilterID(config.Filters)
 
 	return nil
 }

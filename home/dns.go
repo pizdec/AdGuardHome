@@ -41,6 +41,7 @@ func initDNSServer(baseDir string) {
 	config.dnsServer = dnsforward.NewServer(baseDir, config.stats)
 
 	initRDNS()
+	initFiltering()
 }
 
 func isRunning() bool {
@@ -155,6 +156,13 @@ func startDNSServer() error {
 	err = config.dnsServer.Start(&newconfig)
 	if err != nil {
 		return errorx.Decorate(err, "Couldn't start forwarding DNS server")
+	}
+
+	if !config.filteringStarted {
+		config.filteringStarted = true
+		go func() {
+			_ = refreshFiltersIfNecessary(false)
+		}()
 	}
 
 	return nil
