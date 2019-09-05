@@ -160,12 +160,12 @@ func assignUniqueFilterID() int64 {
 // Sets up a timer that will be checking for filters updates periodically
 func periodicallyRefreshFilters() {
 	for {
-		wait := config.DNS.FiltersUpdateInterval
+		wait := config.DNS.FiltersUpdateIntervalHours
 		if wait == 0 {
 			wait = 1
 		}
 		time.Sleep(time.Duration(wait) * time.Hour)
-		if config.DNS.FiltersUpdateInterval == 0 {
+		if config.DNS.FiltersUpdateIntervalHours == 0 {
 			continue
 		}
 

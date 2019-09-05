@@ -213,7 +213,7 @@ func handleFilteringInfo(w http.ResponseWriter, r *http.Request) {
 	resp := filteringConfig{}
 	config.RLock()
 	resp.Enabled = config.DNS.FilteringEnabled
-	resp.Interval = config.DNS.FiltersUpdateInterval
+	resp.Interval = config.DNS.FiltersUpdateIntervalHours
 	for _, f := range config.Filters {
 		fj := filterJSON{
 			ID:          f.ID,
@@ -249,13 +249,13 @@ func handleFilteringConfig(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !checkFiltersUpdateInterval(req.Interval) {
+	if !checkFiltersUpdateIntervalHours(req.Interval) {
 		httpError(w, http.StatusBadRequest, "Unsupported interval")
 		return
 	}
 
 	config.DNS.FilteringEnabled = req.Enabled
-	config.DNS.FiltersUpdateInterval = req.Interval
+	config.DNS.FiltersUpdateIntervalHours = req.Interval
 	httpUpdateConfigReloadDNSReturnOK(w, r)
 
 	returnOK(w)
@@ -272,6 +272,6 @@ func RegisterFilteringHandlers() {
 	httpRegister(http.MethodPost, "/control/filtering/set_rules", handleFilteringSetRules)
 }
 
-func checkFiltersUpdateInterval(i uint32) bool {
+func checkFiltersUpdateIntervalHours(i uint32) bool {
 	return i == 0 || i == 1 || i == 6 || i == 12 || i == 1*24 || i == 2*24
 }
