@@ -347,8 +347,13 @@ func (filter *filter) update() (bool, error) {
 	}
 
 	if !isPrintableText(body[:4096]) {
-		log.Error("Data at %s contains non-printable characters", filter.URL)
-		return false, nil
+		return false, fmt.Errorf("Data contains non-printable characters")
+	}
+
+	s := strings.ToLower(string(body[:4096]))
+	if strings.Index(s, "<html") >= 0 ||
+		strings.Index(s, "<!doctype") >= 0 {
+		return false, fmt.Errorf("Data is HTML, not plain text")
 	}
 
 	// Extract filter name and count number of rules
