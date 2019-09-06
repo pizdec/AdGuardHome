@@ -161,9 +161,7 @@ func startDNSServer() error {
 
 	if !config.filteringStarted {
 		config.filteringStarted = true
-		go func() {
-			_ = refreshFiltersIfNecessary(false)
-		}()
+		startRefreshFilters()
 	}
 
 	return nil

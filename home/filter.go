@@ -25,6 +25,12 @@ func initFiltering() {
 	loadFilters()
 	deduplicateFilters()
 	updateUniqueFilterID(config.Filters)
+}
+
+func startRefreshFilters() {
+	go func() {
+		_ = refreshFiltersIfNecessary(false)
+	}()
 	go periodicallyRefreshFilters()
 }
 
