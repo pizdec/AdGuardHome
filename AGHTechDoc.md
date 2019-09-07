@@ -50,6 +50,8 @@ The first application startup is detected when there's no .yaml configuration fi
 
 We check if the user is root, otherwise we fail with an error.
 
+Pull request test.
+
 Web server is started up on port 3000 and automatically redirects requests to `/` to Installation wizard.
 
 After Installation wizard steps are completed, we write configuration to a file and start normal operation.
